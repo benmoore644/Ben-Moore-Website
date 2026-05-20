@@ -671,6 +671,42 @@
     }
     .hero-scroll.visible { opacity: 1; }
 
+    /* Section headings — heading slides up, gold em trails 0.2s behind */
+    .section-heading em {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s,
+                  transform 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+    }
+    .section-heading.visible em {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Experience items — upward clip wipe, JS applies stagger delay */
+    .experience-item.fade-up {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .experience-item.fade-up.visible {
+      clip-path: inset(0% 0 0 0);
+    }
+
+    /* Certification tiles — scale + fade, JS applies stagger delay */
+    .cert-item.fade-up {
+      opacity: 0;
+      transform: scale(0.95) translateY(14px);
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cert-item.fade-up.visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
     /* Section exit — subtle scale + fade as section leaves upward */
     section:not(.hero), .contact-section {
       will-change: transform, opacity;
@@ -733,7 +769,7 @@
         </div>
         <div class="about-detail-item">
           <div class="about-detail-label">Education</div>
-          <div class="about-detail-value">Queen's University BCom &mdash; Commencing Sept 2026</div>
+          <div class="about-detail-value">Queen's Commerce &mdash; Commencing Sept 2026</div>
         </div>
         <div class="about-detail-item">
           <div class="about-detail-label">Current School</div>
@@ -741,7 +777,7 @@
         </div>
         <div class="about-detail-item">
           <div class="about-detail-label">Athletics</div>
-          <div class="about-detail-value">Varsity Rugby, Howe Sound Secondary</div>
+          <div class="about-detail-value">Rugby, Howe Sound Secondary &mdash; 8 Years</div>
         </div>
         <div class="about-detail-item">
           <div class="about-detail-label">Arts</div>
@@ -973,6 +1009,14 @@
       [$quoteAttr, 1100],
       [$scroll,    1520],
     ].forEach(([el, ms]) => el && setTimeout(() => el.classList.add('visible'), ms));
+
+    // ── Stagger delays (inline styles beat any CSS specificity) ──
+    document.querySelectorAll('.experience-item.fade-up').forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.15}s`;
+    });
+    document.querySelectorAll('.cert-item.fade-up').forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.1}s`;
+    });
 
     // ── Intersection Observer ──────────────────────────
     const observer = new IntersectionObserver(entries => {
