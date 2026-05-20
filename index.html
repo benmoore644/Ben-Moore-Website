@@ -634,6 +634,78 @@
       .nav-links { display: none; }
       .hero-name { font-size: clamp(3.5rem, 18vw, 6rem); }
     }
+
+    /* ── Cinematic animation enhancements ─────────────── */
+
+    /* Hero name — split slide from opposite sides */
+    .hero-name {
+      will-change: transform;
+    }
+    .hero-name-ben,
+    .hero-name-moore {
+      display: inline-block;
+      opacity: 0;
+      transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-name-ben   { transform: translateX(-80px); }
+    .hero-name-moore { transform: translateX(80px);  }
+    .hero-name-ben.visible,
+    .hero-name-moore.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Hero scroll indicator — pulses in last */
+    .hero-scroll {
+      opacity: 0;
+      transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-scroll.visible { opacity: 1; }
+
+    /* Hero inner — parallax target */
+    .hero-inner { will-change: transform; }
+
+    /* Section headings — em follows 0.2s after heading */
+    .section-heading em {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s,
+                  transform 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+    }
+    .section-heading.visible em {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Experience items — slow upward clip wipe, staggered */
+    .experience-item.fade-up {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .experience-item.fade-up.visible {
+      clip-path: inset(0% 0 0 0);
+    }
+
+    /* Certification tiles — scale + fade, staggered */
+    .cert-item.fade-up {
+      opacity: 0;
+      transform: scale(0.95) translateY(16px);
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cert-item.fade-up.visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Section exit — subtle scale + fade as section leaves upward */
+    section:not(.hero), .contact-section {
+      will-change: transform, opacity;
+    }
   </style>
 </head>
 <body>
@@ -656,8 +728,8 @@
   <!-- Hero -->
   <section class="hero" id="hero">
     <div class="hero-inner">
-      <h1 class="hero-name fade-up fade-up-delay-1">
-        Ben<br /><em>Moore</em>
+      <h1 class="hero-name">
+        <span class="hero-name-ben">Ben</span><br /><em class="hero-name-moore">Moore</em>
       </h1>
       <div class="hero-divider fade-up fade-up-delay-2"></div>
       <blockquote class="hero-quote fade-up fade-up-delay-3">
@@ -890,60 +962,108 @@
   </footer>
 
   <script>
-    // Custom cursor
-    const cursor = document.getElementById('cursor');
+    // ── Custom cursor ──────────────────────────────────
+    const cursor    = document.getElementById('cursor');
     const cursorRing = document.getElementById('cursorRing');
-    let mouseX = 0, mouseY = 0;
-    let ringX = 0, ringY = 0;
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', e => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       cursor.style.left = mouseX + 'px';
-      cursor.style.top = mouseY + 'px';
+      cursor.style.top  = mouseY + 'px';
     });
 
-    function animateRing() {
+    (function animateRing() {
       ringX += (mouseX - ringX) * 0.12;
       ringY += (mouseY - ringY) * 0.12;
       cursorRing.style.left = ringX + 'px';
-      cursorRing.style.top = ringY + 'px';
+      cursorRing.style.top  = ringY + 'px';
       requestAnimationFrame(animateRing);
-    }
-    animateRing();
+    })();
 
-    document.querySelectorAll('a, button, nav a').forEach(el => {
+    document.querySelectorAll('a, button').forEach(el => {
       el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
       el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
     });
 
-    // Intersection Observer for scroll animations
-    const fadeEls = document.querySelectorAll('.fade-up');
+    // ── Hero entrance — staged, deliberate ────────────
+    const $ben      = document.querySelector('.hero-name-ben');
+    const $moore    = document.querySelector('.hero-name-moore');
+    const $divider  = document.querySelector('.hero-divider');
+    const $quote    = document.querySelector('.hero-quote');
+    const $quoteAttr = document.querySelector('.hero-quote-attr');
+    const $scroll   = document.querySelector('.hero-scroll');
 
-    const observer = new IntersectionObserver((entries) => {
+    [
+      [$ben,        200],
+      [$moore,      400],
+      [$divider,    720],
+      [$quote,      940],
+      [$quoteAttr, 1100],
+      [$scroll,    1520],
+    ].forEach(([el, ms]) => el && setTimeout(() => el.classList.add('visible'), ms));
+
+    // ── Stagger delays ─────────────────────────────────
+    document.querySelectorAll('.experience-item.fade-up').forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.15}s`;
+    });
+    document.querySelectorAll('.cert-item.fade-up').forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.12}s`;
+    });
+
+    // ── Intersection Observer ──────────────────────────
+    const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
           observer.unobserve(entry.target);
         }
       });
-    }, {
-      threshold: 0.12,
-      rootMargin: '0px 0px -60px 0px'
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => {
+      if (!el.closest('.hero')) observer.observe(el);
     });
 
-    // Hero elements animate on load
-    const heroEls = document.querySelectorAll('.hero .fade-up');
-    heroEls.forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), 300 + i * 180);
-    });
+    // ── Scroll effects ─────────────────────────────────
+    const heroInner = document.querySelector('.hero-inner');
+    const sections  = Array.from(document.querySelectorAll('section:not(.hero), .contact-section'));
+    let   ticking   = false;
 
-    // All other elements via observer
-    fadeEls.forEach(el => {
-      if (!el.closest('.hero')) {
-        observer.observe(el);
+    function applyScrollEffects() {
+      const scrollY = window.scrollY;
+      const vh      = window.innerHeight;
+
+      // Parallax: hero content drifts at 0.25× scroll speed, giving depth
+      if (scrollY < vh * 1.5) {
+        heroInner.style.transform = `translateY(${(scrollY * 0.25).toFixed(2)}px)`;
       }
-    });
+
+      // Section exit: subtle fade + scale-down as each section leaves upward
+      sections.forEach(sec => {
+        const rect = sec.getBoundingClientRect();
+
+        if (rect.top >= 0 || rect.bottom <= 0) {
+          sec.style.opacity   = '';
+          sec.style.transform = '';
+          return;
+        }
+
+        const p = Math.min(1, Math.abs(rect.top) / (sec.offsetHeight * 0.55));
+        sec.style.opacity   = (1 - p * 0.12).toFixed(3);
+        sec.style.transform = `scale(${(1 - p * 0.02).toFixed(4)})`;
+      });
+
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(applyScrollEffects);
+        ticking = true;
+      }
+    }, { passive: true });
   </script>
 
 </body>
